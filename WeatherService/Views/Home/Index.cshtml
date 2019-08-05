@@ -2,7 +2,22 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<body style="background-image:url(/weather_bg.png); background-repeat:no-repeat; background-size:cover; ">
+    <div class="text-left">
+        <h4 style="color:white">Hey There, Please select the file of your own choice with city info below</h4>
+        <br />
+        <form method="post" enctype="multipart/form-data" asp-controller="Home" asp-action="Index">
+            <input id="File1" type="file" name="file" />
+            <input id="Submit1" type="submit" value="Generate Report" />
+        </form>
+       
+        @if (ViewBag.Message != null)
+        {
+            <script type="text/javascript">
+                window.onload = function () {
+                    alert("@ViewBag.Message");
+                };
+            </script>
+        }
+    </div>
+</body>

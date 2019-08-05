@@ -1,15 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
+using System.IO;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using WeatherService.Common;
 using WeatherService.Models;
+using Microsoft.Extensions.Configuration;
 
 namespace WeatherService.Controllers
 {
     public class HomeController : Controller
     {
+        IConfiguration _configuration;
+        public HomeController(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
         public IActionResult Index()
         {
             return View();
@@ -17,6 +26,35 @@ namespace WeatherService.Controllers
 
         public IActionResult Privacy()
         {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Index(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return Content("file not selected");
+
+            var destPath = _configuration["DestinationDir"];
+            
+            using (var stream = new FileStream(file.FileName, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            IEnumerable<City> cities = FileIOHelper.ReadFromFile(file.FileName);
+           
+            string outputDir = "";
+            Parallel.ForEach(cities, (currentCity) =>
+            {
+                IWeatherFetcher wf = new WeatherFetcher(_configuration["WeatherAPIUrl"], _configuration["WeatherAPIKey"]);
+                var currentWeather = wf.GetCurrentWeather(currentCity.CityId);
+                var dirInfo = FileIOHelper.CreateDestinationFolder(destPath);
+                outputDir = dirInfo.FullName;
+                FileIOHelper.WriteToJsonFile<CurrentWeather>($"{dirInfo.FullName}\\{currentCity.Cityname}_{currentCity.CityId} .txt", currentWeather, append: false);
+            });
+           
+            ViewBag.Message = string.Format("Report generated at {0}.\\nCurrent Date and Time: {1}", outputDir, DateTime.Now.ToString());
             return View();
         }
 
