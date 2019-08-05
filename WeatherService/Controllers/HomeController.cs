@@ -43,18 +43,16 @@ namespace WeatherService.Controllers
             }
 
             IEnumerable<City> cities = FileIOHelper.ReadFromFile(file.FileName);
-           
-            string outputDir = "";
+          
             Parallel.ForEach(cities, (currentCity) =>
             {
                 IWeatherFetcher wf = new WeatherFetcher(_configuration["WeatherAPIUrl"], _configuration["WeatherAPIKey"]);
                 var currentWeather = wf.GetCurrentWeather(currentCity.CityId);
                 var dirInfo = FileIOHelper.CreateDestinationFolder(destPath);
-                outputDir = dirInfo.FullName;
                 FileIOHelper.WriteToJsonFile<CurrentWeather>($"{dirInfo.FullName}\\{currentCity.Cityname}_{currentCity.CityId} .txt", currentWeather, append: false);
             });
            
-            ViewBag.Message = string.Format("Report generated at {0}.\\nCurrent Date and Time: {1}", outputDir, DateTime.Now.ToString());
+            ViewBag.Message = string.Format("Report generated at specified destination path.\\nCurrent Date and Time: {0}", DateTime.Now.ToString());
             return View();
         }
 
